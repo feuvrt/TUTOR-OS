@@ -148,4 +148,48 @@ public partial class MainWindow : Window
             );
         }
     }
+
+    private void HideAllSections()
+{
+    StudentsSection.Visibility = Visibility.Collapsed;
+    ScheduleSection.Visibility = Visibility.Collapsed;
+    HomeworkSection.Visibility = Visibility.Collapsed;
+    PaymentsSection.Visibility = Visibility.Collapsed;
+    MaterialsSection.Visibility = Visibility.Collapsed;
+}
+
+private void StudentsButton_Click(object sender, RoutedEventArgs e)
+{
+    HideAllSections();
+
+    StudentsSection.Visibility = Visibility.Visible;
+}
+
+private void ScheduleButton_Click(object sender, RoutedEventArgs e)
+{
+    HideAllSections();
+
+    ScheduleSection.Visibility = Visibility.Visible;
+}
+
+private void HomeworkButton_Click(object sender, RoutedEventArgs e)
+{
+    HideAllSections();
+
+    HomeworkSection.Visibility = Visibility.Visible;
+}
+
+private void PaymentsButton_Click(object sender, RoutedEventArgs e)
+{
+    HideAllSections();
+
+    PaymentsSection.Visibility = Visibility.Visible;
+}
+
+private void MaterialsButton_Click(object sender, RoutedEventArgs e)
+{
+    HideAllSections();
+
+    MaterialsSection.Visibility = Visibility.Visible;
+}
 }

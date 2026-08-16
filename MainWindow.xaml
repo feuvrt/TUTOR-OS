@@ -13,7 +13,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-       
+       <!-- меню -->
         <StackPanel Grid.Column="0"
                     Background="black">
 
@@ -25,40 +25,51 @@
 
             <Button Content="Ученики"
                     Height="45"
-                    Margin="10,5"/>
+                    Margin="10,5"
+                    Click="StudentsButton_Click"/>
 
             <Button Content="Расписание"
                     Height="45"
-                    Margin="10,5"/>
+                    Margin="10,5"
+                    Click="ScheduleButton_Click"/>
 
             <Button Content="Домашние задания"
                     Height="45"
-                    Margin="10,5"/>
+                    Margin="10,5"
+                    Click="HomeworkButton_Click"/>
 
             <Button Content="Оплаты"
                     Height="45"
-                    Margin="10,5"/>
+                    Margin="10,5"
+                    Click="PaymentsButton_Click"/>
 
             <Button Content="Материалы"
                     Height="45"
-                    Margin="10,5"/>
+                    Margin="10,5"
+                    Click="MaterialsButton_Click"/>
 
         </StackPanel>
 
-        <Grid Grid.Column="1"
-              Background="White"
-              Margin="20">
+        <!-- основная часть -->
 
+        <Grid Grid.Column="1"
+              Background="White">
+            <Grid x:Name="StudentsSection"
+                Margin="20">
             <Grid.RowDefinitions>
     <RowDefinition Height="Auto"/>
     <RowDefinition Height="Auto"/>
     <RowDefinition Height="*"/>
 </Grid.RowDefinitions>
 
+<!-- 1 часть - ученики -->
+
             <TextBlock Text="Ученики"
                        FontSize="28"
                        FontWeight="Bold"
                        Margin="0,0,0,20"/>
+
+        <!-- форма добавления учеников -->
 
             <StackPanel Grid.Row="1"
                         Margin="0,0,0,20">
@@ -108,6 +119,8 @@
 
             </StackPanel>
             
+              <!-- таблица учеников -->
+
             <DataGrid x:Name="StudentsTable"
                       Grid.Row="2"
                       AutoGenerateColumns="False"
@@ -137,6 +150,67 @@
 
         </Grid>
 
-    </Grid>
 
+<!-- 2 раздел - расписание -->
+        <StackPanel x:Name="ScheduleSection"
+                        Margin="20"
+                        Visibility="Collapsed">
+
+                <TextBlock Text="Расписание"
+                           FontSize="28"
+                           FontWeight="Bold"/>
+
+                <TextBlock Text="Расписание занятий....."
+                           FontSize="16"
+                           Margin="0,20,0,0"/>
+
+            </StackPanel>
+
+<!-- 3 раздел - дз -->
+        <StackPanel x:Name="HomeworkSection"
+                        Margin="20"
+                        Visibility="Collapsed">
+
+                <TextBlock Text="Домашние задания"
+                           FontSize="28"
+                           FontWeight="Bold"/>
+
+                <TextBlock Text="Домашние задания..."
+                           FontSize="16"
+                           Margin="0,20,0,0"/>
+
+            </StackPanel>
+
+<!-- 4 раздел - оплаты -->
+
+        <StackPanel x:Name="PaymentsSection"
+                        Margin="20"
+                        Visibility="Collapsed">
+
+                <TextBlock Text="Оплаты"
+                           FontSize="28"
+                           FontWeight="Bold"/>
+
+                <TextBlock Text="Информация об оплатах........."
+                           FontSize="16"
+                           Margin="0,20,0,0"/>
+
+            </StackPanel>
+
+<!-- 5 раздел - материалы -->
+        <StackPanel x:Name="MaterialsSection"
+                        Margin="20"
+                        Visibility="Collapsed">
+
+                <TextBlock Text="Материалы"
+                           FontSize="28"
+                           FontWeight="Bold"/>
+
+                <TextBlock Text="Учебные материалы......."
+                           FontSize="16"
+                           Margin="0,20,0,0"/>
+
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Window>
