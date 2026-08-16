@@ -46,21 +46,70 @@
         </StackPanel>
 
         <Grid Grid.Column="1"
-              Background="white"
+              Background="White"
               Margin="20">
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+    <RowDefinition Height="Auto"/>
+    <RowDefinition Height="Auto"/>
+    <RowDefinition Height="*"/>
+</Grid.RowDefinitions>
 
             <TextBlock Text="Ученики"
                        FontSize="28"
                        FontWeight="Bold"
                        Margin="0,0,0,20"/>
 
+            <StackPanel Grid.Row="1"
+                        Margin="0,0,0,20">
+
+                <TextBlock Text="Добавить ученика"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Margin="0,0,0,10"/>
+
+                <StackPanel Orientation="Horizontal">
+
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Имя"/>
+                        <TextBox x:Name="NameInput"
+                                 Width="140"
+                                 Height="25"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Экзамен"/>
+                        <TextBox x:Name="ExamInput"
+                                 Width="140"
+                                 Height="25"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Цена"/>
+                        <TextBox x:Name="PriceInput"
+                                 Width="90"
+                                 Height="25"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="Телефон"/>
+                        <TextBox x:Name="PhoneInput"
+                                 Width="150"
+                                 Height="25"/>
+                    </StackPanel>
+
+                    <Button Content="Добавить"
+                            Width="100"
+                            Height="30"
+                            Margin="0,18,0,0"
+                            Click="AddStudent_Click"/>
+
+                </StackPanel>
+
+            </StackPanel>
+            
             <DataGrid x:Name="StudentsTable"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       AutoGenerateColumns="False"
                       IsReadOnly="True">
 

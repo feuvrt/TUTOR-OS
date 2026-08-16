@@ -73,4 +73,79 @@ public partial class MainWindow : Window
             );
         }
     }
+    private async void AddStudent_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (NameInput.Text == "")
+        {
+            MessageBox.Show("Введите имя ученика");
+            return;
+        }
+
+        if (ExamInput.Text == "")
+        {
+            MessageBox.Show("Введите экзамен");
+            return;
+        }
+
+        if (!int.TryParse(PriceInput.Text, out int price))
+        {
+            MessageBox.Show("Цена должна быть числом");
+            return;
+        }
+
+        try
+        {
+            await using var connection = Database.GetConnection();
+            await connection.OpenAsync();
+
+            string sql = @"
+                INSERT INTO students
+                    (name, exam, price, phone)
+                VALUES
+                    (@name, @exam, @price, @phone);
+            ";
+
+            await using var command =
+                new NpgsqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue(
+                "name",
+                NameInput.Text
+            );
+
+            command.Parameters.AddWithValue(
+                "exam",
+                ExamInput.Text
+            );
+
+            command.Parameters.AddWithValue(
+                "price",
+                price
+            );
+
+            command.Parameters.AddWithValue(
+                "phone",
+                PhoneInput.Text
+            );
+
+            await command.ExecuteNonQueryAsync();
+
+            NameInput.Clear();
+            ExamInput.Clear();
+            PriceInput.Clear();
+            PhoneInput.Clear();
+
+            await LoadStudents();
+
+            MessageBox.Show("Ученик добавлен");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "Ученик не добавлен:\n" + ex.Message
+            );
+        }
+    }
 }
