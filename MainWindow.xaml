@@ -1,12 +1,67 @@
 ﻿<Window x:Class="TutorOS.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TutorOS"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="TutorOS"
+        Height="600"
+        Width="1000"
+        WindowStartupLocation="CenterScreen">
+
     <Grid>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+       
+        <StackPanel Grid.Column="0"
+                    Background="black">
+
+            <TextBlock Text="TutorOS"
+                       Foreground="White"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Margin="20"/>
+
+            <Button Content="Ученики"
+                    Height="45"
+                    Margin="10,5"/>
+
+            <Button Content="Расписание"
+                    Height="45"
+                    Margin="10,5"/>
+
+            <Button Content="Домашние задания"
+                    Height="45"
+                    Margin="10,5"/>
+
+            <Button Content="Оплаты"
+                    Height="45"
+                    Margin="10,5"/>
+
+            <Button Content="Материалы"
+                    Height="45"
+                    Margin="10,5"/>
+
+        </StackPanel>
+
+        <Grid Grid.Column="1"
+              Background="white">
+
+            <StackPanel Margin="30">
+
+                <TextBlock Text="Ученики"
+                           FontSize="28"
+                           FontWeight="Bold"/>
+
+                <TextBlock Text="Ученики ......."
+                           FontSize="16"
+                           Margin="0,10,0,0"/>
+
+            </StackPanel>
+
+        </Grid>
+
     </Grid>
+
 </Window>

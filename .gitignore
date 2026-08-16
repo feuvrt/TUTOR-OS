@@ -1,18 +1,8 @@
-﻿.env
-.env.*
+﻿bin/
+obj/
 
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
+.vs/
 .vscode/
-.idea/
 
-*.log
-.DS_Store
-Thumbs.db
+*.user
+*.suo
