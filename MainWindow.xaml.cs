@@ -17,5 +17,24 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Loaded += MainWindow_Loaded;
+    }
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await using var connection = Database.GetConnection();
+
+            await connection.OpenAsync();
+
+            MessageBox.Show("Успешое подключение к базе данных");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "Ошибка подключения:\n" + ex.Message
+            );
+        }
     }
 }
