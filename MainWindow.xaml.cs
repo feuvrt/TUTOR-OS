@@ -17,6 +17,9 @@ namespace TutorOS;
 
 public partial class MainWindow : Window
 {
+
+    private Student? editingStudent;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -148,6 +151,178 @@ public partial class MainWindow : Window
             );
         }
     }
+
+
+    private async void DeleteStudent_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Student? selectedStudent =
+        StudentsTable.SelectedItem as Student;
+
+    if (selectedStudent == null)
+    {
+        MessageBox.Show("Выберите ученика");
+        return;
+    }
+
+    MessageBoxResult result = MessageBox.Show(
+        $"Удалить ученика {selectedStudent.Name}?",
+        "Удаление",
+        MessageBoxButton.YesNo
+    );
+
+    if (result != MessageBoxResult.Yes)
+    {
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            DELETE FROM students
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedStudent.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadStudents();
+
+        MessageBox.Show("Ученик удалён");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Ученик не удалён:\n" +
+            ex.Message
+        );
+    }
+
+    
+}
+private void EditStudent_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Student? selectedStudent =
+        StudentsTable.SelectedItem as Student;
+
+    if (selectedStudent == null)
+    {
+        MessageBox.Show("Выберите ученика");
+        return;
+    }
+
+    editingStudent = selectedStudent;
+
+    NameInput.Text = selectedStudent.Name;
+    ExamInput.Text = selectedStudent.Exam;
+    PriceInput.Text = selectedStudent.Price.ToString();
+    PhoneInput.Text = selectedStudent.Phone;
+}
+
+private async void SaveStudent_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (editingStudent == null)
+    {
+        MessageBox.Show("Сначала выберите ученика для редактирования");
+        return;
+    }
+
+    if (NameInput.Text == "")
+    {
+        MessageBox.Show("Введите имя ученика");
+        return;
+    }
+
+    if (ExamInput.Text == "")
+    {
+        MessageBox.Show("Введите экзамен");
+        return;
+    }
+
+    if (!int.TryParse(PriceInput.Text, out int price))
+    {
+        MessageBox.Show("Цена должна быть числом");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            UPDATE students
+            SET name = @name,
+                exam = @exam,
+                price = @price,
+                phone = @phone
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "name",
+            NameInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "exam",
+            ExamInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "price",
+            price
+        );
+
+        command.Parameters.AddWithValue(
+            "phone",
+            PhoneInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "id",
+            editingStudent.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        editingStudent = null;
+
+        NameInput.Clear();
+        ExamInput.Clear();
+        PriceInput.Clear();
+        PhoneInput.Clear();
+
+        await LoadStudents();
+
+        MessageBox.Show("Данные ученика изменены");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Изменения не сохранены:\n" +
+            ex.Message
+        );
+    }
+}
 
     private void HideAllSections()
 {
