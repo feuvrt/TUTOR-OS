@@ -164,20 +164,120 @@
 
 
 <!-- 2 раздел - расписание -->
-        <StackPanel x:Name="ScheduleSection"
-                        Margin="20"
-                        Visibility="Collapsed">
 
-                <TextBlock Text="Расписание"
-                           FontSize="28"
-                           FontWeight="Bold"/>
+<Grid x:Name="ScheduleSection"
+      Margin="20"
+      Visibility="Collapsed">
 
-                <TextBlock Text="Расписание занятий....."
-                           FontSize="16"
-                           Margin="0,20,0,0"/>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            </StackPanel>
+    <TextBlock Text="Расписание"
+               FontSize="28"
+               FontWeight="Bold"
+               Margin="0,0,0,20"/>
 
+        <StackPanel Grid.Row="1"
+            Margin="0,0,0,20">
+
+    <TextBlock Text="Добавить занятие"
+               FontSize="18"
+               FontWeight="Bold"
+               Margin="0,0,0,10"/>
+
+    <StackPanel Orientation="Horizontal">
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Ученик"/>
+            <ComboBox x:Name="LessonStudentInput"
+                      Width="140"
+                      Height="25"
+                      DisplayMemberPath="Name"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Дата"/>
+            <DatePicker x:Name="LessonDateInput"
+                        Width="130"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Время"/>
+            <TextBox x:Name="LessonTimeInput"
+                     Width="70"
+                     Height="25"
+                     Text="18:00"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Тема"/>
+            <TextBox x:Name="LessonTopicInput"
+                     Width="140"
+                     Height="25"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Минут"/>
+            <TextBox x:Name="LessonDurationInput"
+                     Width="60"
+                     Height="25"
+                     Text="60"/>
+        </StackPanel>
+
+        <Button Content="Добавить"
+                Width="100"
+                Height="30"
+                Margin="0,18,0,0"
+                Click="AddLesson_Click"/>
+        <Button Content="Удалить"
+                Width="100"
+                Height="30"
+                Margin="10,18,0,0"
+                Click="DeleteLesson_Click"/>
+
+        <Button Content="Проведено"
+                Width="100"
+                Height="30"
+                Margin="10,18,0,0"
+                Click="CompleteLesson_Click"/>
+    </StackPanel>
+
+</StackPanel>
+    <DataGrid x:Name="LessonsTable"
+              Grid.Row="2"
+              AutoGenerateColumns="False"
+              IsReadOnly="True">
+
+        <DataGrid.Columns>
+
+            <DataGridTextColumn Header="Ученик"
+                                Binding="{Binding StudentName}"
+                                Width="*"/>
+
+            <DataGridTextColumn Header="Дата и время"
+                                Binding="{Binding ScheduledAt}"
+                                Width="170"/>
+
+            <DataGridTextColumn Header="Тема"
+                                Binding="{Binding Topic}"
+                                Width="*"/>
+
+            <DataGridTextColumn Header="Минут"
+                                Binding="{Binding DurationMinutes}"
+                                Width="80"/>
+
+            <DataGridTextColumn Header="Статус"
+                                Binding="{Binding Status}"
+                                Width="130"/>
+
+        </DataGrid.Columns>
+
+    </DataGrid>
+
+</Grid>
 <!-- 3 раздел - дз -->
         <StackPanel x:Name="HomeworkSection"
                         Margin="20"

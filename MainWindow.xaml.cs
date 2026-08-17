@@ -30,6 +30,7 @@ public partial class MainWindow : Window
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         await LoadStudents();
+        await LoadLessons();
     }
 
     private async Task LoadStudents()
@@ -68,6 +69,7 @@ public partial class MainWindow : Window
             }
 
             StudentsTable.ItemsSource = students;
+            LessonStudentInput.ItemsSource = students;
         }
         catch (Exception ex)
         {
@@ -366,5 +368,290 @@ private void MaterialsButton_Click(object sender, RoutedEventArgs e)
     HideAllSections();
 
     MaterialsSection.Visibility = Visibility.Visible;
+}
+
+private async Task LoadLessons()
+{
+    try
+    {
+        List<Lesson> lessons = new List<Lesson>();
+
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            SELECT
+                l.id,
+                l.student_id,
+                s.name,
+                l.scheduled_at,
+                l.duration_minutes,
+                l.topic,
+                l.status
+            FROM lessons l
+            JOIN students s
+                ON s.id = l.student_id
+            ORDER BY l.scheduled_at;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            Lesson lesson = new Lesson
+            {
+                Id = reader.GetInt32(0),
+
+                StudentId = reader.GetInt32(1),
+
+                StudentName = reader.GetString(2),
+
+                ScheduledAt = reader.IsDBNull(3)
+                    ? null
+                    : reader.GetDateTime(3),
+
+                DurationMinutes = reader.IsDBNull(4)
+                    ? 60
+                    : reader.GetInt32(4),
+
+                Topic = reader.IsDBNull(5)
+                    ? ""
+                    : reader.GetString(5),
+
+                Status = reader.IsDBNull(6)
+                    ? ""
+                    : reader.GetString(6)
+            };
+
+            lessons.Add(lesson);
+        }
+
+        LessonsTable.ItemsSource = lessons;
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Расписание не загружено:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async void AddLesson_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Student? selectedStudent =
+        LessonStudentInput.SelectedItem as Student;
+
+    if (selectedStudent == null)
+    {
+        MessageBox.Show("Выберите ученика");
+        return;
+    }
+
+    if (LessonDateInput.SelectedDate == null)
+    {
+        MessageBox.Show("Выберите дату");
+        return;
+    }
+
+    if (!TimeSpan.TryParse(
+        LessonTimeInput.Text,
+        out TimeSpan time))
+    {
+        MessageBox.Show("Введите время, например 18:00");
+        return;
+    }
+
+    if (!int.TryParse(
+        LessonDurationInput.Text,
+        out int duration))
+    {
+        MessageBox.Show("Длительность должна быть числом");
+        return;
+    }
+
+    DateTime scheduledAt =
+        LessonDateInput.SelectedDate.Value.Date + time;
+
+    try
+    {
+        await using var connection =
+            Database.GetConnection();
+
+        await connection.OpenAsync();
+
+        string sql = @"
+            INSERT INTO lessons
+                (
+                    student_id,
+                    scheduled_at,
+                    duration_minutes,
+                    topic,
+                    status
+                )
+            VALUES
+                (
+                    @studentId,
+                    @scheduledAt,
+                    @duration,
+                    @topic,
+                    @status
+                );
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "studentId",
+            selectedStudent.Id
+        );
+
+        command.Parameters.AddWithValue(
+            "scheduledAt",
+            scheduledAt
+        );
+
+        command.Parameters.AddWithValue(
+            "duration",
+            duration
+        );
+
+        command.Parameters.AddWithValue(
+            "topic",
+            LessonTopicInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "status",
+            "Запланирован"
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        LessonDateInput.SelectedDate = null;
+        LessonTimeInput.Text = "18:00";
+        LessonTopicInput.Clear();
+        LessonDurationInput.Text = "60";
+
+        await LoadLessons();
+
+        MessageBox.Show("Занятие добавлено");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Занятие не добавлено:\n" +
+            ex.Message
+        );
+    }
+}
+private async void DeleteLesson_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Lesson? selectedLesson =
+        LessonsTable.SelectedItem as Lesson;
+
+    if (selectedLesson == null)
+    {
+        MessageBox.Show("Выберите занятие");
+        return;
+    }
+
+    MessageBoxResult result = MessageBox.Show(
+        $"Удалить занятие с {selectedLesson.StudentName}?",
+        "Удаление",
+        MessageBoxButton.YesNo
+    );
+
+    if (result != MessageBoxResult.Yes)
+    {
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            DELETE FROM lessons
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedLesson.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadLessons();
+
+        MessageBox.Show("Занятие удалено");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Занятие не удалено:\n" +
+            ex.Message
+        );
+    }
+}
+private async void CompleteLesson_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Lesson? selectedLesson =
+        LessonsTable.SelectedItem as Lesson;
+
+    if (selectedLesson == null)
+    {
+        MessageBox.Show("Выберите занятие");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            UPDATE lessons
+            SET status = 'Проведено'
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedLesson.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadLessons();
+
+        MessageBox.Show("Занятие отмечено как проведённое");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Статус не изменён:\n" +
+            ex.Message
+        );
+    }
 }
 }
