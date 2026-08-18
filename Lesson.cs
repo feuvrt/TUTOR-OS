@@ -15,4 +15,17 @@ public class Lesson
     public string Topic { get; set; } = "";
 
     public string Status { get; set; } = "";
+
+    public string DisplayName
+{
+    get
+    {
+        if (ScheduledAt.HasValue)
+        {
+            return $"{StudentName} — {ScheduledAt.Value:dd.MM HH:mm}";
+        }
+
+        return StudentName;
+    }
+}
 }

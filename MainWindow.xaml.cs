@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     {
         await LoadStudents();
         await LoadLessons();
+        await LoadHomeworks();
     }
 
     private async Task LoadStudents()
@@ -431,6 +432,7 @@ private async Task LoadLessons()
         }
 
         LessonsTable.ItemsSource = lessons;
+        HomeworkLessonInput.ItemsSource = lessons;
     }
     catch (Exception ex)
     {
@@ -645,6 +647,299 @@ private async void CompleteLesson_Click(
         await LoadLessons();
 
         MessageBox.Show("Занятие отмечено как проведённое");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Статус не изменён:\n" +
+            ex.Message
+        );
+    }
+}
+private async Task LoadHomeworks()
+{
+    try
+    {
+        List<Homework> homeworks = new List<Homework>();
+
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            SELECT
+                h.id,
+                h.lesson_id,
+                s.name,
+                h.deadline,
+                h.content,
+                h.status,
+                h.teacher_comment
+            FROM homeworks h
+            JOIN lessons l
+                ON l.id = h.lesson_id
+            JOIN students s
+                ON s.id = l.student_id
+            ORDER BY h.deadline;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            Homework homework = new Homework
+            {
+                Id = reader.GetInt32(0),
+
+                LessonId = reader.GetInt32(1),
+
+                StudentName = reader.GetString(2),
+
+                Deadline = reader.IsDBNull(3)
+                    ? null
+                    : reader.GetDateTime(3),
+
+                Content = reader.IsDBNull(4)
+                    ? ""
+                    : reader.GetString(4),
+
+                Status = reader.IsDBNull(5)
+                    ? ""
+                    : reader.GetString(5),
+
+                TeacherComment = reader.IsDBNull(6)
+                    ? ""
+                    : reader.GetString(6)
+            };
+
+            homeworks.Add(homework);
+        }
+
+        HomeworkTable.ItemsSource = homeworks;
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Домашние задания не загружены:\n" +
+            ex.Message
+        );
+    }
+}
+private async void AddHomework_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Lesson? selectedLesson =
+        HomeworkLessonInput.SelectedItem as Lesson;
+
+    if (selectedLesson == null)
+    {
+        MessageBox.Show("Выберите занятие");
+        return;
+    }
+
+    if (HomeworkDeadlineInput.SelectedDate == null)
+    {
+        MessageBox.Show("Выберите дедлайн");
+        return;
+    }
+
+    if (HomeworkContentInput.Text == "")
+    {
+        MessageBox.Show("Введите домашнее задание");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            INSERT INTO homeworks
+                (lesson_id, deadline, content, status)
+            VALUES
+                (@lessonId, @deadline, @content, @status);
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "lessonId",
+            selectedLesson.Id
+        );
+
+        command.Parameters.AddWithValue(
+            "deadline",
+            HomeworkDeadlineInput.SelectedDate.Value
+        );
+
+        command.Parameters.AddWithValue(
+            "content",
+            HomeworkContentInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "status",
+            "Задано"
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        HomeworkDeadlineInput.SelectedDate = null;
+        HomeworkContentInput.Clear();
+
+        await LoadHomeworks();
+
+        MessageBox.Show("Домашнее задание добавлено");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Домашнее задание не добавлено:\n" +
+            ex.Message
+        );
+    }
+}
+private async void CompleteHomework_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Homework? selectedHomework =
+        HomeworkTable.SelectedItem as Homework;
+
+    if (selectedHomework == null)
+    {
+        MessageBox.Show("Выберите домашнее задание");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            UPDATE homeworks
+            SET status = 'Выполнено'
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedHomework.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadHomeworks();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Статус не изменён:\n" +
+            ex.Message
+        );
+    }
+}
+private async void DeleteHomework_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Homework? selectedHomework =
+        HomeworkTable.SelectedItem as Homework;
+
+    if (selectedHomework == null)
+    {
+        MessageBox.Show("Выберите домашнее задание");
+        return;
+    }
+
+    MessageBoxResult result = MessageBox.Show(
+        "Удалить домашнее задание?",
+        "Удаление",
+        MessageBoxButton.YesNo
+    );
+
+    if (result != MessageBoxResult.Yes)
+    {
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            DELETE FROM homeworks
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedHomework.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadHomeworks();
+
+        MessageBox.Show("Домашнее задание удалено");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Домашнее задание не удалено:\n" +
+            ex.Message
+        );
+    }
+}
+private async void CheckHomework_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Homework? selectedHomework =
+        HomeworkTable.SelectedItem as Homework;
+
+    if (selectedHomework == null)
+    {
+        MessageBox.Show("Выберите домашнее задание");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            UPDATE homeworks
+            SET status = 'Проверено'
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedHomework.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadHomeworks();
     }
     catch (Exception ex)
     {
