@@ -503,19 +503,104 @@
 </Grid>
 
 <!-- 5 раздел - материалы -->
-        <StackPanel x:Name="MaterialsSection"
-                        Margin="20"
-                        Visibility="Collapsed">
 
-                <TextBlock Text="Материалы"
-                           FontSize="28"
-                           FontWeight="Bold"/>
+<Grid x:Name="MaterialsSection"
+      Margin="20"
+      Visibility="Collapsed">
 
-                <TextBlock Text="Учебные материалы......."
-                           FontSize="16"
-                           Margin="0,20,0,0"/>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
 
+    <TextBlock Text="Материалы"
+               FontSize="28"
+               FontWeight="Bold"
+               Margin="0,0,0,20"/>
+
+    <StackPanel Grid.Row="1"
+                Margin="0,0,0,20">
+
+        <TextBlock Text="Добавить материал"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   Margin="0,0,0,10"/>
+
+        <StackPanel Orientation="Horizontal">
+
+            <StackPanel Margin="0,0,10,0">
+                <TextBlock Text="Название"/>
+                <TextBox x:Name="MaterialTitleInput"
+                         Width="150"
+                         Height="25"/>
             </StackPanel>
+
+            <StackPanel Margin="0,0,10,0">
+                <TextBlock Text="Тема"/>
+                <TextBox x:Name="MaterialTopicInput"
+                         Width="130"
+                         Height="25"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,0,10,0">
+                <TextBlock Text="Ссылка / путь"/>
+                <TextBox x:Name="MaterialLinkInput"
+                         Width="180"
+                         Height="25"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,0,10,0">
+                <TextBlock Text="Комментарий"/>
+                <TextBox x:Name="MaterialCommentInput"
+                         Width="150"
+                         Height="25"/>
+            </StackPanel>
+
+            <Button Content="Добавить"
+                    Width="90"
+                    Height="30"
+                    Margin="0,18,0,0"
+                    Click="AddMaterial_Click"/>
+
+            <Button Content="Удалить"
+                    Width="80"
+                    Height="30"
+                    Margin="10,18,0,0"
+                    Click="DeleteMaterial_Click"/>
+
+        </StackPanel>
+
+    </StackPanel>
+
+    <DataGrid x:Name="MaterialsTable"
+              Grid.Row="2"
+              AutoGenerateColumns="False"
+              IsReadOnly="True">
+
+        <DataGrid.Columns>
+
+            <DataGridTextColumn Header="Название"
+                                Binding="{Binding Title}"
+                                Width="*"/>
+
+            <DataGridTextColumn Header="Тема"
+                                Binding="{Binding Topic}"
+                                Width="*"/>
+
+            <DataGridTextColumn Header="Ссылка / путь"
+                                Binding="{Binding Link}"
+                                Width="2*"/>
+
+            <DataGridTextColumn Header="Комментарий"
+                                Binding="{Binding Comment}"
+                                Width="*"/>
+
+        </DataGrid.Columns>
+
+    </DataGrid>
+
+</Grid>
         </Grid>
     </Grid>
 </Window>

@@ -33,6 +33,7 @@ public partial class MainWindow : Window
         await LoadLessons();
         await LoadHomeworks();
         await LoadPayments();
+        await LoadMaterials();
     }
 
     private async Task LoadStudents()
@@ -1201,6 +1202,184 @@ private async void DeletePayment_Click(
     {
         MessageBox.Show(
             "Оплата не удалена:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async Task LoadMaterials()
+{
+    try
+    {
+        List<Material> materials = new List<Material>();
+
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            SELECT id, title, topic, link, comment
+            FROM materials
+            ORDER BY id DESC;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            Material material = new Material
+            {
+                Id = reader.GetInt32(0),
+
+                Title = reader.GetString(1),
+
+                Topic = reader.IsDBNull(2)
+                    ? ""
+                    : reader.GetString(2),
+
+                Link = reader.IsDBNull(3)
+                    ? ""
+                    : reader.GetString(3),
+
+                Comment = reader.IsDBNull(4)
+                    ? ""
+                    : reader.GetString(4)
+            };
+
+            materials.Add(material);
+        }
+
+        MaterialsTable.ItemsSource = materials;
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Материалы не загружены:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async void AddMaterial_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    if (MaterialTitleInput.Text == "")
+    {
+        MessageBox.Show("Введите название материала");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            INSERT INTO materials
+                (title, topic, link, comment)
+            VALUES
+                (@title, @topic, @link, @comment);
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "title",
+            MaterialTitleInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "topic",
+            MaterialTopicInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "link",
+            MaterialLinkInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "comment",
+            MaterialCommentInput.Text
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        MaterialTitleInput.Clear();
+        MaterialTopicInput.Clear();
+        MaterialLinkInput.Clear();
+        MaterialCommentInput.Clear();
+
+        await LoadMaterials();
+
+        MessageBox.Show("Материал добавлен");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Материал не добавлен:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async void DeleteMaterial_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Material? selectedMaterial =
+        MaterialsTable.SelectedItem as Material;
+
+    if (selectedMaterial == null)
+    {
+        MessageBox.Show("Выберите материал");
+        return;
+    }
+
+    MessageBoxResult result = MessageBox.Show(
+        $"Удалить материал «{selectedMaterial.Title}»?",
+        "Удаление",
+        MessageBoxButton.YesNo
+    );
+
+    if (result != MessageBoxResult.Yes)
+    {
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            DELETE FROM materials
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedMaterial.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadMaterials();
+
+        MessageBox.Show("Материал удалён");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Материал не удалён:\n" +
             ex.Message
         );
     }
