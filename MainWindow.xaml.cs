@@ -32,6 +32,7 @@ public partial class MainWindow : Window
         await LoadStudents();
         await LoadLessons();
         await LoadHomeworks();
+        await LoadPayments();
     }
 
     private async Task LoadStudents()
@@ -71,6 +72,7 @@ public partial class MainWindow : Window
 
             StudentsTable.ItemsSource = students;
             LessonStudentInput.ItemsSource = students;
+            PaymentStudentInput.ItemsSource = students;
         }
         catch (Exception ex)
         {
@@ -945,6 +947,260 @@ private async void CheckHomework_Click(
     {
         MessageBox.Show(
             "Статус не изменён:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async Task LoadPayments()
+{
+    try
+    {
+        List<Payment> payments = new List<Payment>();
+
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            SELECT
+                p.id,
+                p.student_id,
+                s.name,
+                p.amount,
+                p.payment_date,
+                p.status,
+                p.comment
+            FROM payments p
+            JOIN students s
+                ON s.id = p.student_id
+            ORDER BY p.payment_date DESC;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            Payment payment = new Payment
+            {
+                Id = reader.GetInt32(0),
+                StudentId = reader.GetInt32(1),
+                StudentName = reader.GetString(2),
+                Amount = reader.GetInt32(3),
+
+                PaymentDate = reader.IsDBNull(4)
+                    ? null
+                    : reader.GetDateTime(4),
+
+                Status = reader.IsDBNull(5)
+                    ? ""
+                    : reader.GetString(5),
+
+                Comment = reader.IsDBNull(6)
+                    ? ""
+                    : reader.GetString(6)
+            };
+
+            payments.Add(payment);
+        }
+
+        PaymentsTable.ItemsSource = payments;
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Оплаты не загружены:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async void AddPayment_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Student? selectedStudent =
+        PaymentStudentInput.SelectedItem as Student;
+
+    if (selectedStudent == null)
+    {
+        MessageBox.Show("Выберите ученика");
+        return;
+    }
+
+    if (!int.TryParse(
+        PaymentAmountInput.Text,
+        out int amount))
+    {
+        MessageBox.Show("Сумма должна быть числом");
+        return;
+    }
+
+    if (PaymentDateInput.SelectedDate == null)
+    {
+        MessageBox.Show("Выберите дату");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            INSERT INTO payments
+                (student_id, amount, payment_date, status, comment)
+            VALUES
+                (@studentId, @amount, @date, @status, @comment);
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "studentId",
+            selectedStudent.Id
+        );
+
+        command.Parameters.AddWithValue(
+            "amount",
+            amount
+        );
+
+        command.Parameters.AddWithValue(
+            "date",
+            PaymentDateInput.SelectedDate.Value
+        );
+
+        command.Parameters.AddWithValue(
+            "status",
+            "Ожидается"
+        );
+
+        command.Parameters.AddWithValue(
+            "comment",
+            PaymentCommentInput.Text
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        PaymentAmountInput.Clear();
+        PaymentDateInput.SelectedDate = null;
+        PaymentCommentInput.Clear();
+
+        await LoadPayments();
+
+        MessageBox.Show("Оплата добавлена");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Оплата не добавлена:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async void CompletePayment_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Payment? selectedPayment =
+        PaymentsTable.SelectedItem as Payment;
+
+    if (selectedPayment == null)
+    {
+        MessageBox.Show("Выберите оплату");
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            UPDATE payments
+            SET status = 'Оплачено'
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedPayment.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadPayments();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Статус оплаты не изменён:\n" +
+            ex.Message
+        );
+    }
+}
+
+private async void DeletePayment_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Payment? selectedPayment =
+        PaymentsTable.SelectedItem as Payment;
+
+    if (selectedPayment == null)
+    {
+        MessageBox.Show("Выберите оплату");
+        return;
+    }
+
+    MessageBoxResult result = MessageBox.Show(
+        $"Удалить оплату {selectedPayment.Amount} руб.?",
+        "Удаление",
+        MessageBoxButton.YesNo
+    );
+
+    if (result != MessageBoxResult.Yes)
+    {
+        return;
+    }
+
+    try
+    {
+        await using var connection = Database.GetConnection();
+        await connection.OpenAsync();
+
+        string sql = @"
+            DELETE FROM payments
+            WHERE id = @id;
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "id",
+            selectedPayment.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        await LoadPayments();
+
+        MessageBox.Show("Оплата удалена");
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Оплата не удалена:\n" +
             ex.Message
         );
     }
