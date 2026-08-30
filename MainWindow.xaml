@@ -59,6 +59,7 @@
             <Grid.RowDefinitions>
     <RowDefinition Height="Auto"/>
     <RowDefinition Height="Auto"/>
+    <RowDefinition Height="Auto"/>
     <RowDefinition Height="*"/>
 </Grid.RowDefinitions>
 
@@ -130,11 +131,45 @@
     </StackPanel>
 
 </StackPanel>
-            
+            <StackPanel Grid.Row="2"
+            Margin="0,0,0,20">
+
+    <TextBlock Text="Аккаунт ученика"
+               FontSize="18"
+               FontWeight="Bold"
+               Margin="0,0,0,10"/>
+
+    <StackPanel Orientation="Horizontal">
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Логин"/>
+
+            <TextBox x:Name="StudentLoginInput"
+                     Width="140"
+                     Height="25"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,10,0">
+            <TextBlock Text="Пароль"/>
+
+            <PasswordBox x:Name="StudentPasswordInput"
+                         Width="140"
+                         Height="25"/>
+        </StackPanel>
+
+        <Button Content="Создать аккаунт"
+                Width="130"
+                Height="30"
+                Margin="0,18,0,0"
+                Click="CreateStudentAccount_Click"/>
+
+    </StackPanel>
+
+</StackPanel>
               <!-- таблица учеников -->
 
             <DataGrid x:Name="StudentsTable"
-                      Grid.Row="2"
+                      Grid.Row="3"
                       AutoGenerateColumns="False"
                       IsReadOnly="True">
 

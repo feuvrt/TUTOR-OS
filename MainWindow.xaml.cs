@@ -1384,4 +1384,162 @@ private async void DeleteMaterial_Click(
         );
     }
 }
+
+private async void CreateStudentAccount_Click(
+    object sender,
+    RoutedEventArgs e)
+{
+    Student? selectedStudent =
+        StudentsTable.SelectedItem as Student;
+
+    if (selectedStudent == null)
+    {
+        MessageBox.Show(
+            "Сначала выберите ученика в таблице"
+        );
+
+        return;
+    }
+
+    if (StudentLoginInput.Text == "")
+    {
+        MessageBox.Show("Введите логин");
+        return;
+    }
+
+    if (StudentPasswordInput.Password == "")
+    {
+        MessageBox.Show("Введите пароль");
+        return;
+    }
+
+    try
+    {
+        await using var connection =
+            Database.GetConnection();
+
+        await connection.OpenAsync();
+
+
+
+        string studentCheckSql = @"
+            SELECT COUNT(*)
+            FROM users
+            WHERE student_id = @studentId;
+        ";
+
+        await using var studentCheckCommand =
+            new NpgsqlCommand(
+                studentCheckSql,
+                connection
+            );
+
+        studentCheckCommand.Parameters.AddWithValue(
+            "studentId",
+            selectedStudent.Id
+        );
+
+        long studentAccountCount =
+            (long)(await studentCheckCommand.ExecuteScalarAsync())!;
+
+        if (studentAccountCount > 0)
+        {
+            MessageBox.Show(
+                "У этого ученика уже есть аккаунт"
+            );
+
+            return;
+        }
+
+
+        string loginCheckSql = @"
+            SELECT COUNT(*)
+            FROM users
+            WHERE login = @login;
+        ";
+
+        await using var loginCheckCommand =
+            new NpgsqlCommand(
+                loginCheckSql,
+                connection
+            );
+
+        loginCheckCommand.Parameters.AddWithValue(
+            "login",
+            StudentLoginInput.Text
+        );
+
+        long loginCount =
+            (long)(await loginCheckCommand.ExecuteScalarAsync())!;
+
+        if (loginCount > 0)
+        {
+            MessageBox.Show(
+                "Такой логин уже используется"
+            );
+
+            return;
+        }
+
+
+        string passwordHash =
+            PasswordHelper.HashPassword(
+                StudentPasswordInput.Password
+            );
+
+
+        string sql = @"
+            INSERT INTO users
+                (
+                    login,
+                    password_hash,
+                    role,
+                    student_id
+                )
+            VALUES
+                (
+                    @login,
+                    @password,
+                    'student',
+                    @studentId
+                );
+        ";
+
+        await using var command =
+            new NpgsqlCommand(sql, connection);
+
+        command.Parameters.AddWithValue(
+            "login",
+            StudentLoginInput.Text
+        );
+
+        command.Parameters.AddWithValue(
+            "password",
+            passwordHash
+        );
+
+        command.Parameters.AddWithValue(
+            "studentId",
+            selectedStudent.Id
+        );
+
+        await command.ExecuteNonQueryAsync();
+
+        StudentLoginInput.Clear();
+        StudentPasswordInput.Clear();
+ 
+        MessageBox.Show(
+            $"Аккаунт для {selectedStudent.Name} создан"
+        );
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            "Аккаунт не создан:\n" +
+            ex.Message
+        );
+    }
+}
+
+
 }
